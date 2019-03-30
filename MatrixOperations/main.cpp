@@ -6,6 +6,7 @@ struct matrix
 	unsigned int orderx;
 	unsigned int ordery;
 	float **vals;
+	char *identifier;
 };
 
 matrix *allocs;
@@ -20,7 +21,7 @@ void SetMatrixChild(matrix &matrix, unsigned int x, unsigned int y, float value)
 
 int main()
 {
-	_STD cout << "Matrix operations\n";
+	_STD cout << "Matrix operations\nCoded by Mohamed Ammar(MRKDaGods)\nv2\n";
 
 	identity = matrix{
 		2,
@@ -353,6 +354,26 @@ void PrintMatrix(matrix &m)
 	}
 }
 
+bool GetRefFromId(const char *id, unsigned int *ref)
+{
+	if (!id)
+		return false;
+
+	for (unsigned int i = 0; i < allocSize; i++)
+	{
+		char *cs = allocs[i].identifier;
+		if (!cs)
+			continue;
+		if (!strcmp(cs, id))
+		{
+			if (ref)
+				*ref = i;
+			return true;
+		}
+	}
+	return false;
+}
+
 void ProcessCmd(_STD string cmd)
 {
 	_STD string *arr;
@@ -375,7 +396,15 @@ void ProcessCmd(_STD string cmd)
 						bool inverse = false;
 						if (curr.find('-') == 0)
 							inverse = true;
-						unsigned int ref = _STD stoi(inverse ? curr.substr(1) : curr);
+						unsigned int ref;
+						try 
+						{
+							ref = _STD stoi(inverse ? curr.substr(1) : curr);
+						}
+						catch (_STD invalid_argument& e)
+						{
+							GetRefFromId(inverse ? curr.substr(1).c_str() : curr.c_str(), &ref);
+						}
 						if (ref >= allocSize)
 						{
 							_STD cout << "Matrix " << ref << "doesn't exist\n";
@@ -411,7 +440,17 @@ void ProcessCmd(_STD string cmd)
 						}
 						if (curr.find('-') == 0)
 							inverse = true;
-						unsigned int ref = _STD stoi(inverse ? curr.substr(1) : curr);
+
+						unsigned int ref;
+						try
+						{
+							ref = _STD stoi(inverse ? curr.substr(1) : curr);
+						}
+						catch (_STD invalid_argument & e)
+						{
+							GetRefFromId(inverse ? curr.substr(1).c_str() : curr.c_str(), &ref);
+						}
+
 						if (ref >= allocSize)
 						{
 							_STD cout << "Matrix " << ref << "doesn't exist\n";
@@ -431,7 +470,15 @@ void ProcessCmd(_STD string cmd)
 			{
 				if (sz == 2)
 				{
-					unsigned int ref = _STD stoi(arr[i + 1]);
+					unsigned int ref;
+					try
+					{
+						ref = _STD stoi(arr[i + 1]);
+					}
+					catch (_STD invalid_argument & e)
+					{
+						GetRefFromId(arr[i + 1].c_str(), &ref);
+					}
 					if (ref >= allocSize)
 					{
 						_STD cout << "Matrix doesn't exist\n";
@@ -446,7 +493,15 @@ void ProcessCmd(_STD string cmd)
 			{
 				if (sz == 2)
 				{
-					unsigned int ref = _STD stoi(arr[i + 1]);
+					unsigned int ref;
+					try
+					{
+						ref = _STD stoi(arr[i + 1]);
+					}
+					catch (_STD invalid_argument & e)
+					{
+						GetRefFromId(arr[i + 1].c_str(), &ref);
+					}
 					if (ref >= allocSize)
 					{
 						_STD cout << "Matrix doesn't exist\n";
@@ -528,9 +583,23 @@ void ProcessCmd(_STD string cmd)
 							}
 						}
 						_STD cout << "Integrity: " << (arr[i + 2 + neededCells][0] == ')') << '\n';
+						unsigned int targetIdIdx = i + 3 + neededCells;
+						if (targetIdIdx < sz)
+						{
+							m.identifier = strcpy(new char[arr[targetIdIdx].size() + 1], arr[targetIdIdx].c_str());
+						}
 					}
 
-					_STD cout << "Allocated matrix[" << m.orderx << "x" << m.ordery << "] [" << AllocateMatrix(m) << "]\n";
+					if (GetRefFromId(m.identifier, 0))
+					{
+						_STD cout << "Matrix '" << m.identifier << "' already exists!\n";
+						return;
+					}
+
+					_STD cout << "Allocated matrix[" << m.orderx << "x" << m.ordery << "] [" << AllocateMatrix(m) << ']';
+					if (m.identifier)
+						_STD cout << " ID[" << m.identifier << ']';
+					_STD cout << '\n';
 					PrintMatrix(m);
 					/*for (unsigned int x = 0; x < m.orderx; x++)
 					{
